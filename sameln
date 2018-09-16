@@ -1,0 +1,54 @@
+#!/bin/bash
+
+var=$1
+#set field separator as newlines to ignore spaces
+IFS=$'\n'
+
+index2=0
+index=0
+#loop through all ls outputs
+for files in `ls -a $var | sort`
+do
+#ensures that file is not directory
+if [ -f "$var/$files" ]
+then
+    #checks for readability of file
+    if [ -r "$var/$files" ]
+    then
+	#create one array for all hiden files and another for regular
+        if [ "${files:0:1}" == "." ]
+        then
+            arr2[$index2]="$var/$files"
+            index2=$((index2 + 1))
+        else
+            arr[$index]="$var/$files"
+            index=$((index + 1))
+        fi
+    else
+        echo "You do not have access to $files"
+    fi
+fi
+done
+
+#combine file arrays with hidden in front
+indextot=$((index + index2))
+arrtot=( "${arr2[@]}" "${arr[@]}" )
+
+#loop through every file checking for copies
+i=0
+while [ $i -lt $indextot ]
+do
+   j=$((i + 1))
+    while [ $j -lt $indextot ]
+    do
+	#link a copies together if found
+         cmp -s "${arrtot[$i]}" "${arrtot[$j]}"
+         if [ $? -eq 0 ]
+	     #force a link if identical
+            then
+                ln -f "${arrtot[$i]}" "${arrtot[$j]}"
+fi
+        j=$((j + 1))
+    done
+    i=$((i + 1))
+done
